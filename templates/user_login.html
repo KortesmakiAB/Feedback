@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% block title %}
+<h4>User Login</h4>
 {% endblock %}
 
 
@@ -14,11 +15,12 @@
             <div class="form-group">
             {{field.label}}
             {{field(class_="form-control")}}
-            {% for err in field.errors %}
+
+                {% for err in field.errors %}
                 <small class="form-text text-danger">
                     {{err}}
                 </small>
-            {% endfor %}
+                {% endfor %}
             </div>
             {% endfor %}
             <div class="my-2">

@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% block title %}
+<h4>User Details</h4>
 {% endblock %}
 
 
@@ -8,13 +9,16 @@
 {% if user %}
     <div class="row">
         <div class="col">
-            <p>Username: {{user.username}}</p>
-            <p>Name: {{user.first_name}} {{user.last_name}}</p>
-            <p>Email Address: {{user.email}}</p>
-            <p>
-                <a href="/users/{{user.username}}/feedback/add" class="btn btn-primary">Add Feedback</a>
-                <button class="btn btn-danger" type="submit">Delete User</button>
-            </p>
+            <form action="/users/{{user.username}}/delete" method="post">
+                <p>Username: {{user.username}}</p>
+                <p>Name: {{user.first_name}} {{user.last_name}}</p>
+                <p>Email Address: {{user.email}}</p>
+                <p>
+                    <a href="/logout" class="btn btn-success">Logout</a>
+                    <a href="/users/{{user.username}}/feedback/add" class="btn btn-primary">Add Feedback</a>
+                    <button class="btn btn-danger" type="submit">Delete User</button>
+                </p>
+            </form>
         </div>
         <hr>
     </div>
@@ -22,7 +26,7 @@
     <div class="row">
         <div class="col">
             {% for feed in user.feedback %}
-            <form action="/../../feedback/{{feed.id}}/delete" method="post">
+            <form action="/feedback/{{feed.id}}/delete" method="post">
                 <h4 class="d-inline">Feedback Post</h4> 
                     <a href="/../../feedback/{{feed.id}}/update" class="btn btn-sm btn-success">Edit</a>
                     <button class="btn btn-sm btn-danger"  type="submit">Delete</button>

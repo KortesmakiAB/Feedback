@@ -2,16 +2,16 @@ from flask import Flask, redirect, render_template, session, flash
 from models import *
 from forms import *
 from flask_debugtoolbar import DebugToolbarExtension
+from sqlalchemy.exc import IntegrityError
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///feedback'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = True
-
-connect_db(app)
-
 app.config['SECRET_KEY'] = "GimmeSomeFeedback!Pls"
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
+
+connect_db(app)
 debug = DebugToolbarExtension(app)
 
 
@@ -37,10 +37,18 @@ def register_user():
         last_name   = form.last_name.data
 
         user = User.register(username, password, email, first_name, last_name)
-        db.session.add(user)
-        db.session.commit()
 
-        return redirect('/secret')
+        db.session.add(user)
+        try:
+            db.session.commit()
+        except IntegrityError:
+            form.username.errors.append('Username taken.  Please pick another')
+            return render_template('user_register.html', form = form)
+
+        session['username'] = user.username
+        flash('Welcome! Successfully Created Your Account!', "success")
+    
+        return redirect(f'/users/{user.username}')
     
     else:
         return render_template('user_register.html', form = form)
@@ -49,7 +57,7 @@ def register_user():
 @app.route('/login', methods = ['GET', 'POST'])
 def login_user():
     """Show a form that when submitted will login a user (GET).
-    Process the login form, ensuring the user is authenticated and going to /secret if so."""
+    Process the login form, ensuring the user is authenticated and redirect to /users/<username>"""
 
     form = LoginForm()
 
@@ -57,7 +65,7 @@ def login_user():
         username    = form.username.data
         password    = form.password.data
 
-        user        = User.login(username, password)
+        user        = User.authenticate(username, password)
 
         if user:
             flash(f'Welcome Back, {user.username}!', 'primary')
@@ -65,23 +73,19 @@ def login_user():
             return redirect(f'/users/{user.username}')
         
         else:
-            form.username.errors = ['Invalid username/password.']
-
-    else:
-        return render_template('user_login.html', form = form)
+            form.password.errors = ['Invalid username/password.']
+    
+    return render_template('user_login.html', form = form)
 
 
 @app.route('/logout')
 def logout_user():
     """Logout the user, clear any information from the session and redirect to root route"""
 
-    session.pop(user)
+    session.pop('username')
     flash('Goodbye!', 'info')
 
-    # ???????????? TODO
-    db.session.rollback()
-
-    return redirect('/')
+    return redirect('/register')
 
 
 @app.route('/users/<username>')
@@ -111,9 +115,10 @@ def delete_user(username):
         user    = User.query.get_or_404(username)
         db.session.delete(user)
         db.session.commit()
+        session.pop('username')
         flash("User account deleted!", "info")
 
-        return render_template('user_details.html', user = user)
+        return redirect('/')
 
    
 @app.route('/users/<username>/feedback/add', methods = ['GET', 'POST'])
@@ -136,6 +141,7 @@ def handle_feedback(username):
         
         db.session.add(feedback)
         db.session.commit()
+        flash('Feedback added!', 'success')
 
         return redirect(f'/users/{username}')
 
@@ -177,11 +183,12 @@ def delete_feedback(id):
         return redirect('/')
 
     feedback    = Feedback.query.get_or_404(id)
+    username    = feedback.username
     # raise
     if feedback.username == session['username']:
         db.session.delete(feedback)
         db.session.commit()
         flash("Feedback deleted!", "info")
 
-        return redirect(f'/../../users/{feedback.user.username}')
+        return redirect(f'/../../users/{username}')
 

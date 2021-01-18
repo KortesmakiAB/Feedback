@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
 
 {% block title %}
+<h4>Register a New User</h4>
 {% endblock %}
 
 
 {% block content %}
-<div class="row">
+<div class="row mb-5">
     <div class="col">
         <form method="post">
             {{ form.hidden_tag() }}
@@ -22,10 +23,12 @@
             </div>
             {% endfor %}
             <div class="my-2">
-                <a href="/register" class="btn btn-danger">Go Back</a>
                 <button class="btn  btn-success">Submit</button>
             </div>
         </form>
     </div>
+</div>
+<div class="row">
+    <h6>Registered Users Login <a href="/login">here</a></h6>
 </div>
 {% endblock %}
