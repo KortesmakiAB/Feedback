@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{% endblock %}
+
+
+{% block content %}
+<div class="row">
+    <div class="col">
+        <form method="post">
+            {{ form.hidden_tag() }}
+
+            {% for field in form if field.widget.input_type != 'hidden' %}
+            <div class="form-group">
+            {{field.label}}
+            {{field(class_="form-control")}}
+            {% for err in field.errors %}
+                <small class="form-text text-danger">
+                    {{err}}
+                </small>
+            {% endfor %}
+            </div>
+            {% endfor %}
+            <div class="my-2">
+                <a href="/users/{{session['username']}}" class="btn btn-danger">Go Back</a>
+                <button class="btn  btn-success">Submit</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
